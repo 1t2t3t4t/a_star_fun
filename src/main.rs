@@ -88,6 +88,9 @@ async fn game_loop(ctx: &mut Context, grids: &mut Grids) {
         let Some((x, y)) = grid_pos else {
             return
         };
+        if ctx.start_pos.is_some() && ctx.end_pos.is_some() {
+            clear_all(ctx, grids);
+        }
         let grid = &mut grids[y][x];
         if ctx.start_pos.is_none() {
             ctx.start_pos = Some((x as i32, y as i32));
