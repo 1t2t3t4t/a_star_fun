@@ -38,9 +38,12 @@ fn get_grid_pos_from_point(x: f32, y: f32, offset: (f32, f32)) -> Option<(usize,
 fn clear_all(ctx: &mut Context, grids: &mut Grids) {
     ctx.start_pos = None;
     ctx.end_pos = None;
-    for y in 0..GRID_SIZE_Y {
-        for x in 0..GRID_SIZE_X {
-            let grid = &mut grids[y][x];
+    clean_path(grids);
+}
+
+fn clean_path(grids: &mut Grids) {
+    for grid_x in grids {
+        for grid in grid_x {
             if grid.state != GridState::Blocked {
                 grid.state = GridState::Idle;
             }
@@ -56,6 +59,19 @@ fn elapsed<T>(f: impl FnOnce() -> T) -> T {
     res
 }
 
+fn force_find_path(ctx: &mut Context, grids: &mut Grids) {
+    clean_path(grids);
+    let start_pos = ctx.start_pos.unwrap();
+    let end_pod = ctx.end_pos.unwrap();
+    let block = ctx.block.clone();
+    let path =
+        elapsed(move || path_finder::a_star((GRID_SIZE_X, GRID_SIZE_Y), start_pos, end_pod, block));
+    for (i, node) in path.iter().enumerate() {
+        let grid = &mut grids[node.1 as usize][node.0 as usize];
+        grid.state = GridState::Path(i);
+    }
+}
+
 async fn game_loop(ctx: &mut Context, grids: &mut Grids) {
     let mouse_pos = mouse_position();
     let grid_pos = get_grid_pos_from_point(mouse_pos.0, mouse_pos.1, ctx.draw_offset);
@@ -64,6 +80,9 @@ async fn game_loop(ctx: &mut Context, grids: &mut Grids) {
             let grid = &mut grids[y][x];
             grid.state = GridState::Blocked;
             ctx.block.insert((x as i32, y as i32));
+            if ctx.start_pos.is_some() && ctx.end_pos.is_some() {
+                force_find_path(ctx, grids);
+            }
         }
     } else if is_mouse_button_pressed(MouseButton::Left) {
         let Some((x, y)) = grid_pos else {
@@ -76,23 +95,7 @@ async fn game_loop(ctx: &mut Context, grids: &mut Grids) {
         } else if ctx.end_pos.is_none() {
             ctx.end_pos = Some((x as i32, y as i32));
             grid.state = GridState::Focus;
-
-            let start_pos = ctx.start_pos.unwrap();
-            let end_pod = ctx.end_pos.unwrap();
-            let block = ctx.block.clone();
-            let path = elapsed(move || {
-                path_finder::a_star(
-                    (GRID_SIZE_X, GRID_SIZE_Y),
-                    start_pos,
-                    end_pod,
-                    block,
-                )
-            });
-            for i in 0..path.len() {
-                let node = path[i];
-                let grid = &mut grids[node.1 as usize][node.0 as usize];
-                grid.state = GridState::Path(i);
-            }
+            force_find_path(ctx, grids);
         }
     }
 
@@ -139,9 +142,8 @@ async fn game_loop(ctx: &mut Context, grids: &mut Grids) {
 async fn draw_loop(ctx: &mut Context, grids: &mut Grids) {
     clear_background(WHITE);
 
-    for y in 0..GRID_SIZE_Y {
-        for x in 0..GRID_SIZE_X {
-            let grid = &grids[y][x];
+    for grid_x in grids {
+        for grid in grid_x {
             let size = grid.size;
             let (top_x, top_y) = grid.pos(ctx.draw_offset);
             let (cen_x, cen_y) = grid.center(ctx.draw_offset);
@@ -165,11 +167,15 @@ async fn draw_loop(ctx: &mut Context, grids: &mut Grids) {
                 draw_circle(cen_x, cen_y, 5f32, RED);
             }
 
-            draw_text(&format!("({}, {})", x, y), top_x, top_y, 15f32, BLACK)
+            draw_text(
+                &format!("({}, {})", grid.x, grid.y),
+                top_x,
+                top_y,
+                15f32,
+                BLACK,
+            )
         }
     }
-
-    draw_text("HELLO", 20.0, 20.0, 20.0, DARKGRAY);
 
     next_frame().await
 }

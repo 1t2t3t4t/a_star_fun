@@ -6,7 +6,7 @@ fn is_in_range(size: (usize, usize), node: &(i32, i32)) -> bool {
 }
 fn calc_cost(start: &(i32, i32), end: &(i32, i32)) -> i32 {
     let displacement = ((end.0 - start.0).abs(), (end.1 - start.1).abs());
-    
+
     if displacement.0 > displacement.1 {
         (14 * displacement.1) + (10 * (displacement.0 - displacement.1))
     } else {
@@ -48,7 +48,7 @@ fn reconstruct_path(
     path
 }
 
-#[derive(Ord, Eq, Debug)]
+#[derive(Eq, Debug)]
 struct Node(i32, (i32, i32));
 
 impl PartialEq<Self> for Node {
@@ -57,15 +57,19 @@ impl PartialEq<Self> for Node {
     }
 }
 
+impl Ord for Node {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
+
 impl PartialOrd for Node {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        if self.0 < other.0 {
-            Some(Ordering::Greater)
-        } else if self.0 == other.0 {
-            Some(Ordering::Equal)
-        } else {
-            Some(Ordering::Less)
-        }
+        Some(match self.0.cmp(&other.0) {
+            Ordering::Less => Ordering::Greater,
+            Ordering::Equal => Ordering::Equal,
+            Ordering::Greater => Ordering::Less,
+        })
     }
 }
 
