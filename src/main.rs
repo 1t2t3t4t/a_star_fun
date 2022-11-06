@@ -4,6 +4,7 @@ mod path_finder;
 use crate::grid::{Grid, GridState};
 use macroquad::prelude::*;
 use std::collections::HashSet;
+use std::time::Instant;
 
 const GRID_SIZE_X: usize = 20;
 const GRID_SIZE_Y: usize = 20;
@@ -47,6 +48,14 @@ fn clear_all(ctx: &mut Context, grids: &mut Grids) {
     }
 }
 
+fn elapsed<T>(f: impl FnOnce() -> T) -> T {
+    let start = Instant::now();
+    let res = f();
+    let elapsed = Instant::now().duration_since(start);
+    println!("Process took {} ms.", elapsed.as_millis());
+    res
+}
+
 async fn game_loop(ctx: &mut Context, grids: &mut Grids) {
     let mouse_pos = mouse_position();
     let grid_pos = get_grid_pos_from_point(mouse_pos.0, mouse_pos.1, ctx.draw_offset);
@@ -70,12 +79,15 @@ async fn game_loop(ctx: &mut Context, grids: &mut Grids) {
 
             let start_pos = ctx.start_pos.unwrap();
             let end_pod = ctx.end_pos.unwrap();
-            let path = path_finder::a_star(
-                (GRID_SIZE_X, GRID_SIZE_Y),
-                start_pos,
-                end_pod,
-                ctx.block.clone(),
-            );
+            let block = ctx.block.clone();
+            let path = elapsed(move || {
+                path_finder::a_star(
+                    (GRID_SIZE_X, GRID_SIZE_Y),
+                    start_pos,
+                    end_pod,
+                    block,
+                )
+            });
             for i in 0..path.len() {
                 let node = path[i];
                 let grid = &mut grids[node.1 as usize][node.0 as usize];
