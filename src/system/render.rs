@@ -1,10 +1,21 @@
 use ecs::manager::EntityManager;
 use macroquad::color::{BLACK, BLUE, RED, WHITE};
-use macroquad::prelude::{draw_circle, draw_line, draw_rectangle, draw_text};
+use macroquad::prelude::{draw_circle, draw_line, draw_rectangle, draw_text, get_frame_time, get_screen_data};
+use macroquad::text::measure_text;
+use macroquad::time::get_fps;
+use macroquad::window::{screen_height, screen_width};
 use crate::component::CameraMovement;
 use crate::component::tag::Camera;
 use crate::grid::GridState;
 use crate::Grids;
+
+pub fn fps() {
+    let delta_time = get_frame_time();
+    let fps = get_fps();
+    let text = format!("FPS: {}, {}", fps, delta_time);
+    let text_size = measure_text(&text, None, 15, 1f32);
+    draw_text(&text, screen_width() - text_size.width, screen_height() - text_size.height, 15f32, BLACK);
+}
 
 pub fn draw_grids(manager: &mut EntityManager, grids: &mut Grids) {
     let Some((movement, _)) = manager.query_entities_components_one::<(CameraMovement, Camera)>() else {

@@ -54,6 +54,7 @@ async fn draw_loop(ctx: &mut Context, grids: &mut Grids) {
     clear_background(WHITE);
 
     system::render::draw_grids(&mut ctx.entity_manager, grids);
+    system::render::fps();
 
     next_frame().await
 }
