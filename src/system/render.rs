@@ -7,8 +7,7 @@ use crate::grid::GridState;
 use crate::Grids;
 
 pub fn draw_grids(manager: &mut EntityManager, grids: &mut Grids) {
-    let cameras = manager.query_entities_components::<(CameraMovement, Camera)>();
-    let Some((movement, _)) = cameras.first() else {
+    let Some((movement, _)) = manager.query_entities_components_one::<(CameraMovement, Camera)>() else {
         return
     };
 

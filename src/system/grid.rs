@@ -12,8 +12,7 @@ struct SubmitPath {
 }
 
 pub fn grid_block_system(manager: &mut EntityManager, grids: &mut Grids) {
-    let movements = manager.query_entities_component::<CameraMovement>();
-    let Some(camera_movement) = movements.first() else {
+    let Some(camera_movement) = manager.query_entities_component_one::<CameraMovement>() else {
         return
     };
     let mouse_pos = mouse_position();
@@ -25,11 +24,10 @@ pub fn grid_block_system(manager: &mut EntityManager, grids: &mut Grids) {
             grid.state = GridState::Blocked;
 
             for block_component in manager.query_entities_component_mut::<GridBlock>() {
-                block_component.1.block.insert((x as i32, y as i32));
+                block_component.block.insert((x as i32, y as i32));
             }
 
-            let paths = manager.query_entities_component::<GridPath>();
-            let Some(grid_path) = paths.first() else {
+            let Some(grid_path) = manager.query_entities_component_one::<GridPath>() else {
                 return
             };
 
@@ -38,8 +36,7 @@ pub fn grid_block_system(manager: &mut EntityManager, grids: &mut Grids) {
                     start_pos: grid_path.start_pos.unwrap(),
                     end_pos: grid_path.end_pos.unwrap()
                 };
-                let mut event = manager.query_entities_component_mut::<EventSystem>();
-                let Some((_, event_system)) = event.first_mut() else {
+                let Some(event_system) = manager.query_entities_component_one_mut::<EventSystem>() else {
                     return
                 };
                 event_system.send(submit);
@@ -49,8 +46,7 @@ pub fn grid_block_system(manager: &mut EntityManager, grids: &mut Grids) {
 }
 
 pub fn grid_path_system(manager: &mut EntityManager, grids: &mut Grids) {
-    let movements = manager.query_entities_component::<CameraMovement>();
-    let Some(camera_movement) = movements.first() else {
+    let Some(camera_movement) = manager.query_entities_component_one::<CameraMovement>() else {
         return
     };
     let mouse_pos = mouse_position();
@@ -60,8 +56,7 @@ pub fn grid_path_system(manager: &mut EntityManager, grids: &mut Grids) {
         let Some((x, y)) = grid_pos else {
             return
         };
-        let mut paths = manager.query_entities_component_mut::<GridPath>();
-        let Some((_, grid_path)) = paths.first_mut() else {
+        let Some(grid_path) = manager.query_entities_component_one_mut::<GridPath>() else {
             return
         };
         if grid_path.start_pos.is_some() && grid_path.end_pos.is_some() {
@@ -80,8 +75,7 @@ pub fn grid_path_system(manager: &mut EntityManager, grids: &mut Grids) {
                 end_pos: grid_path.end_pos.unwrap()
             };
 
-            let mut event = manager.query_entities_component_mut::<EventSystem>();
-            let Some((_, event_system)) = event.first_mut() else {
+            let Some(event_system) = manager.query_entities_component_one_mut::<EventSystem>() else {
                 return
             };
             event_system.send(submit_path);
@@ -90,14 +84,12 @@ pub fn grid_path_system(manager: &mut EntityManager, grids: &mut Grids) {
 }
 
 pub fn clear_all_system(manager: &mut EntityManager, grids: &mut Grids) {
-    let mut event = manager.query_entities_component_mut::<EventSystem>();
-    let Some((_, event)) = event.first_mut() else {
+    let Some(event) = manager.query_entities_component_one_mut::<EventSystem>() else {
         return
     };
     let events: Vec<ClearPathEvent> = event.read();
     if !events.is_empty() {
-        let mut path = manager.query_entities_component_mut::<GridPath>();
-        if let Some((_, path)) = path.first_mut() {
+        if let Some(path) = manager.query_entities_component_one_mut::<GridPath>() {
             path.start_pos = None;
             path.end_pos = None;
         }
@@ -116,16 +108,14 @@ fn clean_path(grids: &mut Grids) {
 }
 
 pub fn find_path_system(manager: &mut EntityManager, grids: &mut Grids) {
-    let mut event = manager.query_entities_component_mut::<EventSystem>();
-    let Some((_, event)) = event.first_mut() else {
+    let Some(event) = manager.query_entities_component_one_mut::<EventSystem>() else {
         return
     };
     let events: Vec<SubmitPath> = event.read();
     let Some(submit_path) = events.first() else {
         return
     };
-    let block = manager.query_entities_component::<GridBlock>();
-    let Some(block) = block.first() else {
+    let Some(block) = manager.query_entities_component_one::<GridBlock>() else {
         return
     };
     clean_path(grids);

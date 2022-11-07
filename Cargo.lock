@@ -113,8 +113,8 @@ checksum = "0c87e182de0887fd5361989c677c4e8f5000cd9491d6d563161a8f3a5519fc7f"
 
 [[package]]
 name = "ecs"
-version = "0.1.1"
-source = "git+https://github.com/1t2t3t4t/ecs#879a541decacc0df22f54844cc9a3f540c2decc1"
+version = "0.2.0"
+source = "git+https://github.com/1t2t3t4t/ecs#145cd69a605ed3146d8dc78666af43df04c1d814"
 dependencies = [
  "hashbrown 0.12.3",
 ]
