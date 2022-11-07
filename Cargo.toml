@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 macroquad = "0.3.24"
+ecs = { "git" = "https://github.com/1t2t3t4t/ecs", version = "0.1.1" }
